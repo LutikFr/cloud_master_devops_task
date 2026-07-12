@@ -43,7 +43,6 @@
     state: present
     force_update: true
   become: true
-  become_user: "{{ minikube_user }}"
 
 - name: Add Istio Helm repository
   kubernetes.core.helm_repository:
@@ -52,4 +51,3 @@
     state: present
     force_update: true
   become: true
-  become_user: "{{ minikube_user }}"
