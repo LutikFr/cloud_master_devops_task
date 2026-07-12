@@ -12,6 +12,25 @@
   become: true
   become_user: "{{ minikube_user }}"
 
+- name: Download Harbor Helm chart from GitHub
+  ansible.builtin.get_url:
+    url: "https://github.com/goharbor/harbor-helm/archive/refs/tags/v{{ harbor_chart_version }}.tar.gz"
+    dest: "/tmp/harbor-helm-{{ harbor_chart_version }}.tar.gz"
+    mode: "0644"
+    timeout: 120
+    force: false
+  register: harbor_chart_download
+  until: harbor_chart_download is succeeded
+  retries: 5
+  delay: 20
+
+- name: Extract Harbor Helm chart
+  ansible.builtin.unarchive:
+    src: "/tmp/harbor-helm-{{ harbor_chart_version }}.tar.gz"
+    dest: /tmp
+    remote_src: true
+    creates: "/tmp/harbor-helm-{{ harbor_chart_version }}/Chart.yaml"
+
 - name: Render Harbor values
   ansible.builtin.template:
     src: harbor-values.yaml.j2
@@ -21,7 +40,7 @@
 - name: Install or upgrade Harbor Helm release
   kubernetes.core.helm:
     name: harbor
-    chart_ref: harbor/harbor
+    chart_ref: "/tmp/harbor-helm-{{ harbor_chart_version }}"
     release_namespace: "{{ harbor_namespace }}"
     create_namespace: false
     values_files:

@@ -57,15 +57,6 @@
       apiVersion: v1
       generated: "2026-01-01T00:00:00Z"
       repositories:
-      - name: harbor
-        url: https://helm.goharbor.io
-        caFile: ""
-        certFile: ""
-        keyFile: ""
-        username: ""
-        password: ""
-        pass_credentials_all: false
-        insecure_skip_tls_verify: false
       - name: istio
         url: https://istio-release.storage.googleapis.com/charts
         caFile: ""
@@ -108,7 +99,6 @@
   retries: 5
   delay: 20
   loop:
-    - { name: harbor, url: "https://helm.goharbor.io" }
     - { name: istio, url: "https://istio-release.storage.googleapis.com/charts" }
     - { name: prometheus-community, url: "https://prometheus-community.github.io/helm-charts" }
     - { name: grafana, url: "https://grafana.github.io/helm-charts" }
