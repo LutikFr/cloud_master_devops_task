@@ -25,6 +25,8 @@ git checkout solution/devops-chaos-task
 ./scripts/setup.sh
 ```
 
+Если sudo требует пароль, `setup.sh` запросит его на этапе проверки sudo и запустит локальный playbook через `sudo`. Minikube при этом создаётся от обычного пользователя, заданного переменной `minikube_user`.
+
 Локальный запуск playbook на самой VM:
 
 ```bash

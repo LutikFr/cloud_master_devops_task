@@ -6,14 +6,14 @@
 
 - name: Download Istio release archive
   ansible.builtin.get_url:
-    url: "https://github.com/istio/istio/releases/download/{{ istio_version }}/istio-{{ istio_version }}-linux-amd64.tar.gz"
-    dest: "/tmp/istio-{{ istio_version }}-linux-amd64.tar.gz"
+    url: "https://github.com/istio/istio/releases/download/{{ istio_version }}/istio-{{ istio_version }}-linux-{{ binary_arch }}.tar.gz"
+    dest: "/tmp/istio-{{ istio_version }}-linux-{{ binary_arch }}.tar.gz"
     mode: "0644"
   when: not versioned_istioctl_bin.stat.exists
 
 - name: Extract Istio release archive
   ansible.builtin.unarchive:
-    src: "/tmp/istio-{{ istio_version }}-linux-amd64.tar.gz"
+    src: "/tmp/istio-{{ istio_version }}-linux-{{ binary_arch }}.tar.gz"
     dest: /tmp
     remote_src: true
     creates: "/tmp/istio-{{ istio_version }}/bin/istioctl"

@@ -1,5 +1,12 @@
 minikube_version: "v1.33.1"
 kubernetes_version: "v1.30.0"
+kubernetes_apt_minor: "{{ kubernetes_version | regex_replace('^v?([0-9]+\\.[0-9]+).*', 'v\\1') }}"
+binary_arch_map:
+  x86_64: amd64
+  aarch64: arm64
+  arm64: arm64
+  amd64: amd64
+binary_arch: "{{ binary_arch_map[ansible_architecture] | default(ansible_architecture) }}"
 minikube_driver: "docker"
 minikube_user: "{{ ansible_env.SUDO_USER | default(ansible_user_id) }}"
 minikube_cpus: "4"

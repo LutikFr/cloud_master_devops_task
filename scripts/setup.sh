@@ -12,6 +12,8 @@ if [[ ${EUID} -eq 0 ]]; then
   exit 1
 fi
 
+EXTRA_ARGS=("$@")
+
 log "Validate sudo access"
 sudo -v
 
@@ -25,9 +27,8 @@ log "Install Ansible collections"
 if command -v ansible-galaxy >/dev/null 2>&1; then
   ansible-galaxy collection install -r "$ANSIBLE_DIR/requirements.yml" || true
 fi
-
 log "Run Ansible playbook"
 cd "$ANSIBLE_DIR"
-ansible-playbook -i inventory.local.ini site.yml "$@"
+sudo env PATH="$PATH" ansible-playbook -i inventory.local.ini site.yml "${EXTRA_ARGS[@]}"
 
 log "Installation finished"

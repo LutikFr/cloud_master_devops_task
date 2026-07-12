@@ -6,16 +6,44 @@
 
 - name: Install minikube
   ansible.builtin.get_url:
-    url: "https://storage.googleapis.com/minikube/releases/{{ minikube_version }}/minikube-linux-amd64"
+    url: "https://storage.googleapis.com/minikube/releases/{{ minikube_version }}/minikube-linux-{{ binary_arch }}"
     dest: /usr/local/bin/minikube
     mode: "0755"
+    timeout: 60
+  register: minikube_download
+  until: minikube_download is succeeded
+  retries: 5
+  delay: 10
   when: not minikube_bin.stat.exists
 
-- name: Install kubectl
-  ansible.builtin.get_url:
-    url: "https://dl.k8s.io/release/{{ kubernetes_version }}/bin/linux/amd64/kubectl"
-    dest: /usr/local/bin/kubectl
+- name: Create apt keyrings directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
     mode: "0755"
+
+- name: Add Kubernetes apt repository key
+  ansible.builtin.get_url:
+    url: "https://pkgs.k8s.io/core:/stable:/{{ kubernetes_apt_minor }}/deb/Release.key"
+    dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
+    mode: "0644"
+    timeout: 60
+  register: kubernetes_key_download
+  until: kubernetes_key_download is succeeded
+  retries: 5
+  delay: 10
+
+- name: Add Kubernetes apt repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/{{ kubernetes_apt_minor }}/deb/ /"
+    filename: kubernetes
+    state: present
+    update_cache: true
+
+- name: Install kubectl
+  ansible.builtin.apt:
+    name: kubectl
+    state: present
 
 - name: Check minikube status
   ansible.builtin.command: minikube status --format='{{ '{{' }}.Host{{ '}}' }}'

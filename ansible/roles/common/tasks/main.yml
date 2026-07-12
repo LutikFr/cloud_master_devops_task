@@ -18,17 +18,12 @@
       - ethtool
       - apt-transport-https
       - python3-pip
+      - python3-kubernetes
+      - python3-yaml
+      - python3-jmespath
       - acl
     state: present
     update_cache: true
-
-- name: Install Python Kubernetes client for Ansible modules
-  ansible.builtin.pip:
-    name:
-      - kubernetes
-      - PyYAML
-      - jmespath
-    executable: pip3
 
 - name: Install Docker engine packages
   ansible.builtin.apt:
@@ -44,15 +39,14 @@
 
 - name: Add invoking user to docker group
   ansible.builtin.user:
-    name: "{{ ansible_env.SUDO_USER | default(ansible_user_id) }}"
+    name: "{{ minikube_user }}"
     groups: docker
     append: true
 
 - name: Allow invoking user to access current Docker socket
   ansible.posix.acl:
     path: /var/run/docker.sock
-    entity: "{{ ansible_env.SUDO_USER | default(ansible_user_id) }}"
+    entity: "{{ minikube_user }}"
     etype: user
     permissions: rw
     state: present
-  when: ansible_env.SUDO_USER is defined or ansible_user_id is defined
