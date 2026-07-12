@@ -10,7 +10,7 @@ binary_arch: "{{ binary_arch_map[ansible_facts['architecture']] | default(ansibl
 minikube_driver: "docker"
 minikube_user: "{{ ansible_env.SUDO_USER | default(ansible_user_id) }}"
 minikube_cpus: "4"
-minikube_memory: "2200"
+minikube_memory: "4096"
 minikube_disk_size: "30g"
 helm_version: "v3.15.3"
 istio_version: "1.22.3"
