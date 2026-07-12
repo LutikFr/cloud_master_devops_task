@@ -58,16 +58,6 @@
     name: kubectl
     state: present
 
-- name: Ensure root kube/minikube directories exist
-  ansible.builtin.file:
-    path: "{{ item }}"
-    state: directory
-    mode: "0700"
-  loop:
-    - /root/.kube
-    - /root/.minikube
-
-
 - name: Ensure minikube user kube directories exist
   ansible.builtin.file:
     path: "/home/{{ minikube_user }}/{{ item }}"
@@ -81,14 +71,22 @@
     - .minikube
 
 - name: Check minikube status
-  ansible.builtin.command: minikube status --format='{{ '{{' }}.Host{{ '}}' }}'
-  become: true
+  ansible.builtin.command: >-
+    sudo -u {{ minikube_user }} -H
+    env HOME=/home/{{ minikube_user }}
+    MINIKUBE_HOME=/home/{{ minikube_user }}
+    KUBECONFIG=/home/{{ minikube_user }}/.kube/config
+    minikube status --format='{{ '{{' }}.Host{{ '}}' }}'
   register: minikube_status
   changed_when: false
   failed_when: false
 
 - name: Start minikube single-node cluster
   ansible.builtin.command: >-
+    sudo -u {{ minikube_user }} -H
+    env HOME=/home/{{ minikube_user }}
+    MINIKUBE_HOME=/home/{{ minikube_user }}
+    KUBECONFIG=/home/{{ minikube_user }}/.kube/config
     minikube start
     --driver={{ minikube_driver }}
     --kubernetes-version={{ kubernetes_version }}
@@ -96,11 +94,6 @@
     --memory={{ minikube_memory }}
     --disk-size={{ minikube_disk_size }}
     --addons=default-storageclass,storage-provisioner
-  become: true
-  environment:
-    HOME: /root
-    MINIKUBE_HOME: /root
-    KUBECONFIG: /root/.kube/config
   when: minikube_status.rc != 0 or 'Running' not in minikube_status.stdout
 
 - name: Wait for Kubernetes nodes to become Ready
@@ -108,6 +101,7 @@
     api_version: v1
     kind: Node
   become: true
+  become_user: "{{ minikube_user }}"
   register: node_info
   until:
     - node_info.resources | length > 0
