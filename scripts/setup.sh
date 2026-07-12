@@ -13,6 +13,9 @@ if [[ ${EUID} -eq 0 ]]; then
 fi
 
 EXTRA_ARGS=("$@")
+LOCAL_USER="$(id -un)"
+LOCAL_HOME="$(getent passwd "$LOCAL_USER" | cut -d: -f6)"
+EXTRA_ARGS+=(--extra-vars "minikube_user=${LOCAL_USER} remote_repo_dir=${LOCAL_HOME}/cloud_master_devops_task")
 
 log "Validate sudo access"
 sudo -v
