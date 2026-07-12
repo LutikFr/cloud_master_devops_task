@@ -94,6 +94,8 @@
     values:
       labels:
         istio: ingressgateway
+      service:
+        type: NodePort
   become: true
   become_user: "{{ minikube_user }}"
 
