@@ -6,7 +6,7 @@ binary_arch_map:
   aarch64: arm64
   arm64: arm64
   amd64: amd64
-binary_arch: "{{ binary_arch_map[ansible_facts['architecture']] | default(ansible_facts['architecture']) }}"
+binary_arch: "{{ binary_arch_map[ansible_architecture] | default(ansible_architecture) }}"
 minikube_driver: "docker"
 minikube_user: "{{ ansible_env.SUDO_USER | default(ansible_user_id) }}"
 minikube_cpus: "4"
@@ -19,8 +19,8 @@ demo_namespace: "demo"
 harbor_host: "harbor.localtest.me"
 demo_host: "demo.localtest.me"
 harbor_admin_password: "Harbor12345"
-repo_root: "{{ playbook_dir | dirname }}"
-kubeconfig: "/root/.kube/config"
+repo_root: "{{ remote_repo_dir }}"
+kubeconfig: "{{ ansible_env.HOME }}/.kube/config"
 monitoring_namespace: "monitoring"
 grafana_admin_password: "admin"
 remote_repo_dir: "/home/{{ minikube_user }}/cloud_master_devops_task"

@@ -48,6 +48,7 @@
       metadata:
         name: istio-system
   become: true
+  become_user: "{{ minikube_user }}"
 
 - name: Install Istio base chart
   kubernetes.core.helm:
@@ -59,6 +60,7 @@
     wait: true
     state: present
   become: true
+  become_user: "{{ minikube_user }}"
 
 - name: Install Istio discovery chart
   kubernetes.core.helm:
@@ -71,6 +73,7 @@
     wait_timeout: 5m
     state: present
   become: true
+  become_user: "{{ minikube_user }}"
 
 - name: Install Istio ingress gateway chart
   kubernetes.core.helm:
@@ -86,6 +89,7 @@
       labels:
         istio: ingressgateway
   become: true
+  become_user: "{{ minikube_user }}"
 
 - name: Wait for istiod deployment to be available
   kubernetes.core.k8s_info:
@@ -94,6 +98,7 @@
     namespace: istio-system
     name: istiod
   become: true
+  become_user: "{{ minikube_user }}"
   register: istiod_deploy
   until:
     - istiod_deploy.resources | length == 1
@@ -108,6 +113,7 @@
     namespace: istio-system
     name: istio-ingressgateway
   become: true
+  become_user: "{{ minikube_user }}"
   register: ingressgateway_deploy
   until:
     - ingressgateway_deploy.resources | length == 1

@@ -10,6 +10,7 @@
         labels:
           istio-injection: enabled
   become: true
+  become_user: "{{ minikube_user }}"
 
 - name: Render Harbor values
   ansible.builtin.template:
@@ -29,18 +30,21 @@
     wait_timeout: 15m
     state: present
   become: true
+  become_user: "{{ minikube_user }}"
 
 - name: Apply Harbor Istio gateway
   kubernetes.core.k8s:
     state: present
     template: harbor/gateway-harbor-gateway.yaml.j2
   become: true
+  become_user: "{{ minikube_user }}"
 
 - name: Apply Harbor Istio virtual service
   kubernetes.core.k8s:
     state: present
     template: harbor/virtualservice-harbor-route.yaml.j2
   become: true
+  become_user: "{{ minikube_user }}"
 
 - name: Print access summary
   ansible.builtin.debug:

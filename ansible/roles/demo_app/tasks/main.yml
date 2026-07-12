@@ -4,30 +4,35 @@
     state: present
     src: "{{ repo_root }}/manifests/apps/demo/namespace-demo.yaml"
   become: true
+  become_user: "{{ minikube_user }}"
 
 - name: Apply httpbin deployment
   kubernetes.core.k8s:
     state: present
     src: "{{ repo_root }}/manifests/apps/demo/deployment-httpbin.yaml"
   become: true
+  become_user: "{{ minikube_user }}"
 
 - name: Apply httpbin service
   kubernetes.core.k8s:
     state: present
     src: "{{ repo_root }}/manifests/apps/demo/service-httpbin.yaml"
   become: true
+  become_user: "{{ minikube_user }}"
 
 - name: Apply sleep deployment
   kubernetes.core.k8s:
     state: present
     src: "{{ repo_root }}/manifests/apps/demo/deployment-sleep.yaml"
   become: true
+  become_user: "{{ minikube_user }}"
 
 - name: Apply fake-db service
   kubernetes.core.k8s:
     state: present
     src: "{{ repo_root }}/manifests/apps/demo/service-fake-db.yaml"
   become: true
+  become_user: "{{ minikube_user }}"
 
 - name: Wait for httpbin deployment to be available
   kubernetes.core.k8s_info:
@@ -36,6 +41,7 @@
     namespace: "{{ demo_namespace }}"
     name: httpbin
   become: true
+  become_user: "{{ minikube_user }}"
   register: httpbin_deploy
   until:
     - httpbin_deploy.resources | length == 1
@@ -50,6 +56,7 @@
     namespace: "{{ demo_namespace }}"
     name: sleep
   become: true
+  become_user: "{{ minikube_user }}"
   register: sleep_deploy
   until:
     - sleep_deploy.resources | length == 1
@@ -62,9 +69,11 @@
     state: present
     template: demo/gateway-demo-gateway.yaml.j2
   become: true
+  become_user: "{{ minikube_user }}"
 
 - name: Apply demo Istio virtual service
   kubernetes.core.k8s:
     state: present
     template: demo/virtualservice-httpbin-route.yaml.j2
   become: true
+  become_user: "{{ minikube_user }}"

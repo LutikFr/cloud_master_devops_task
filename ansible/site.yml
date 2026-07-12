@@ -3,10 +3,6 @@
   hosts: local
   gather_facts: true
   become: true
-  environment:
-    HOME: /root
-    MINIKUBE_HOME: /root
-    KUBECONFIG: /root/.kube/config
   roles:
     - workspace
     - common

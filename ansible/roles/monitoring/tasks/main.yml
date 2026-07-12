@@ -6,6 +6,7 @@
     state: present
     force_update: true
   become: true
+  become_user: "{{ minikube_user }}"
 
 - name: Add Grafana Helm repository
   kubernetes.core.helm_repository:
@@ -14,6 +15,7 @@
     state: present
     force_update: true
   become: true
+  become_user: "{{ minikube_user }}"
 
 - name: Create monitoring namespace
   kubernetes.core.k8s:
@@ -24,6 +26,7 @@
       metadata:
         name: "{{ monitoring_namespace }}"
   become: true
+  become_user: "{{ minikube_user }}"
 
 - name: Render Prometheus values
   ansible.builtin.template:
@@ -43,6 +46,7 @@
     wait_timeout: 10m
     state: present
   become: true
+  become_user: "{{ minikube_user }}"
 
 - name: Render Grafana values
   ansible.builtin.template:
@@ -62,3 +66,4 @@
     wait_timeout: 10m
     state: present
   become: true
+  become_user: "{{ minikube_user }}"

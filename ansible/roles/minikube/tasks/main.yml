@@ -67,6 +67,19 @@
     - /root/.kube
     - /root/.minikube
 
+
+- name: Ensure minikube user kube directories exist
+  ansible.builtin.file:
+    path: "/home/{{ minikube_user }}/{{ item }}"
+    state: directory
+    owner: "{{ minikube_user }}"
+    group: "{{ minikube_user }}"
+    mode: "0755"
+    recurse: true
+  loop:
+    - .kube
+    - .minikube
+
 - name: Check minikube status
   ansible.builtin.command: minikube status --format='{{ '{{' }}.Host{{ '}}' }}'
   become: true
