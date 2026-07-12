@@ -96,6 +96,14 @@
     --addons=default-storageclass,storage-provisioner
   when: minikube_status.rc != 0 or 'Running' not in minikube_status.stdout
 
+- name: Secure minikube kubeconfig permissions
+  ansible.builtin.file:
+    path: "/home/{{ minikube_user }}/.kube/config"
+    owner: "{{ minikube_user }}"
+    group: "{{ minikube_user }}"
+    mode: "0600"
+  when: minikube_status.rc != 0 or 'Running' not in minikube_status.stdout
+
 - name: Wait for Kubernetes nodes to become Ready
   kubernetes.core.k8s_info:
     api_version: v1

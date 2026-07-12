@@ -36,20 +36,78 @@
     remote_src: true
   when: helm_needs_install
 
-- name: Add Harbor Helm repository
-  kubernetes.core.helm_repository:
-    name: harbor
-    repo_url: https://helm.goharbor.io
-    state: present
-    force_update: true
-  become: true
-  become_user: "{{ minikube_user }}"
+- name: Ensure Helm config and cache directories exist
+  ansible.builtin.file:
+    path: "/home/{{ minikube_user }}/{{ item }}"
+    state: directory
+    owner: "{{ minikube_user }}"
+    group: "{{ minikube_user }}"
+    mode: "0755"
+  loop:
+    - .config/helm
+    - .cache/helm/repository
 
-- name: Add Istio Helm repository
-  kubernetes.core.helm_repository:
-    name: istio
-    repo_url: https://istio-release.storage.googleapis.com/charts
-    state: present
-    force_update: true
-  become: true
-  become_user: "{{ minikube_user }}"
+- name: Configure Helm repositories
+  ansible.builtin.copy:
+    dest: "/home/{{ minikube_user }}/.config/helm/repositories.yaml"
+    owner: "{{ minikube_user }}"
+    group: "{{ minikube_user }}"
+    mode: "0644"
+    content: |
+      apiVersion: v1
+      generated: "2026-01-01T00:00:00Z"
+      repositories:
+      - name: harbor
+        url: https://helm.goharbor.io
+        caFile: ""
+        certFile: ""
+        keyFile: ""
+        username: ""
+        password: ""
+        pass_credentials_all: false
+        insecure_skip_tls_verify: false
+      - name: istio
+        url: https://istio-release.storage.googleapis.com/charts
+        caFile: ""
+        certFile: ""
+        keyFile: ""
+        username: ""
+        password: ""
+        pass_credentials_all: false
+        insecure_skip_tls_verify: false
+      - name: prometheus-community
+        url: https://prometheus-community.github.io/helm-charts
+        caFile: ""
+        certFile: ""
+        keyFile: ""
+        username: ""
+        password: ""
+        pass_credentials_all: false
+        insecure_skip_tls_verify: false
+      - name: grafana
+        url: https://grafana.github.io/helm-charts
+        caFile: ""
+        certFile: ""
+        keyFile: ""
+        username: ""
+        password: ""
+        pass_credentials_all: false
+        insecure_skip_tls_verify: false
+
+- name: Download Helm repository indexes
+  ansible.builtin.get_url:
+    url: "{{ item.url }}/index.yaml"
+    dest: "/home/{{ minikube_user }}/.cache/helm/repository/{{ item.name }}-index.yaml"
+    owner: "{{ minikube_user }}"
+    group: "{{ minikube_user }}"
+    mode: "0644"
+    timeout: 120
+  register: helm_index_download
+  until: helm_index_download is succeeded
+  retries: 5
+  delay: 20
+  loop:
+    - { name: harbor, url: "https://helm.goharbor.io" }
+    - { name: istio, url: "https://istio-release.storage.googleapis.com/charts" }
+    - { name: prometheus-community, url: "https://prometheus-community.github.io/helm-charts" }
+    - { name: grafana, url: "https://grafana.github.io/helm-charts" }

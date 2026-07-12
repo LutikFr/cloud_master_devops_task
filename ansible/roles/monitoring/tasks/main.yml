@@ -1,22 +1,4 @@
 ---
-- name: Add Prometheus Community Helm repository
-  kubernetes.core.helm_repository:
-    name: prometheus-community
-    repo_url: https://prometheus-community.github.io/helm-charts
-    state: present
-    force_update: true
-  become: true
-  become_user: "{{ minikube_user }}"
-
-- name: Add Grafana Helm repository
-  kubernetes.core.helm_repository:
-    name: grafana
-    repo_url: https://grafana.github.io/helm-charts
-    state: present
-    force_update: true
-  become: true
-  become_user: "{{ minikube_user }}"
-
 - name: Create monitoring namespace
   kubernetes.core.k8s:
     state: present
