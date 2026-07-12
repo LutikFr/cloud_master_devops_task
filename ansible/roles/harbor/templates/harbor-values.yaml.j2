@@ -1,0 +1,36 @@
+expose:
+  type: clusterIP
+  tls:
+    enabled: false
+externalURL: http://{{ harbor_host }}
+harborAdminPassword: {{ harbor_admin_password }}
+logLevel: info
+portal:
+  replicas: 1
+core:
+  replicas: 1
+jobservice:
+  replicas: 1
+registry:
+  replicas: 1
+trivy:
+  enabled: false
+notary:
+  enabled: false
+database:
+  type: internal
+  internal:
+    password: changeit
+redis:
+  type: internal
+persistence:
+  enabled: true
+  persistentVolumeClaim:
+    registry:
+      size: 5Gi
+    database:
+      size: 1Gi
+    redis:
+      size: 1Gi
+    jobservice:
+      size: 1Gi

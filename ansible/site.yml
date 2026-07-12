@@ -1,0 +1,14 @@
+---
+- name: Install single-node Kubernetes with Minikube, Istio, Harbor and demo app
+  hosts: local
+  gather_facts: true
+  become: true
+  roles:
+    - workspace
+    - common
+    - minikube
+    - helm
+    - istio
+    - demo_app
+    - harbor
+    - monitoring

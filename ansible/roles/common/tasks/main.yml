@@ -1,0 +1,58 @@
+---
+- name: Install common packages
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+      - jq
+      - tar
+      - gzip
+      - git
+      - openssl
+      - gettext-base
+      - conntrack
+      - socat
+      - ebtables
+      - ethtool
+      - apt-transport-https
+      - python3-pip
+      - acl
+    state: present
+    update_cache: true
+
+- name: Install Python Kubernetes client for Ansible modules
+  ansible.builtin.pip:
+    name:
+      - kubernetes
+      - PyYAML
+      - jmespath
+    executable: pip3
+
+- name: Install Docker engine packages
+  ansible.builtin.apt:
+    name:
+      - docker.io
+    state: present
+
+- name: Enable and start Docker
+  ansible.builtin.systemd:
+    name: docker
+    enabled: true
+    state: started
+
+- name: Add invoking user to docker group
+  ansible.builtin.user:
+    name: "{{ ansible_env.SUDO_USER | default(ansible_user_id) }}"
+    groups: docker
+    append: true
+
+- name: Allow invoking user to access current Docker socket
+  ansible.posix.acl:
+    path: /var/run/docker.sock
+    entity: "{{ ansible_env.SUDO_USER | default(ansible_user_id) }}"
+    etype: user
+    permissions: rw
+    state: present
+  when: ansible_env.SUDO_USER is defined or ansible_user_id is defined

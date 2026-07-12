@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sleep
+  namespace: demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sleep
+  template:
+    metadata:
+      labels:
+        app: sleep
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+      - name: sleep
+        image: curlimages/curl:8.9.1
+        command:
+        - /bin/sleep
+        - 3650d

@@ -1,0 +1,54 @@
+---
+- name: Create Harbor namespace with Istio sidecar injection label
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: "{{ harbor_namespace }}"
+        labels:
+          istio-injection: enabled
+  become: true
+  become_user: "{{ minikube_user }}"
+
+- name: Render Harbor values
+  ansible.builtin.template:
+    src: harbor-values.yaml.j2
+    dest: /tmp/harbor-values.yaml
+    mode: "0600"
+
+- name: Install or upgrade Harbor Helm release
+  kubernetes.core.helm:
+    name: harbor
+    chart_ref: harbor/harbor
+    release_namespace: "{{ harbor_namespace }}"
+    create_namespace: false
+    values_files:
+      - /tmp/harbor-values.yaml
+    wait: true
+    wait_timeout: 15m
+    state: present
+  become: true
+  become_user: "{{ minikube_user }}"
+
+- name: Apply Harbor Istio gateway
+  kubernetes.core.k8s:
+    state: present
+    template: harbor/gateway-harbor-gateway.yaml.j2
+  become: true
+  become_user: "{{ minikube_user }}"
+
+- name: Apply Harbor Istio virtual service
+  kubernetes.core.k8s:
+    state: present
+    template: harbor/virtualservice-harbor-route.yaml.j2
+  become: true
+  become_user: "{{ minikube_user }}"
+
+- name: Print access summary
+  ansible.builtin.debug:
+    msg:
+      - "Minikube cluster is ready."
+      - "Demo internal check: kubectl -n demo exec deploy/sleep -c sleep -- curl -sS http://httpbin.demo.svc.cluster.local:8000/status/200"
+      - "Harbor admin password: {{ harbor_admin_password }}"

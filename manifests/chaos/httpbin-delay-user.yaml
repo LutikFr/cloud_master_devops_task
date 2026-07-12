@@ -1,0 +1,16 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: httpbin-delay-user
+  namespace: demo
+spec:
+  hosts: ["httpbin.demo.svc.cluster.local"]
+  http:
+  - fault:
+      delay:
+        percentage: {value: 50}
+        fixedDelay: 3s
+    route:
+    - destination:
+        host: httpbin.demo.svc.cluster.local
+        port: {number: 8000}

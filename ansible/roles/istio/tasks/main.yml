@@ -1,0 +1,117 @@
+---
+- name: Check versioned istioctl binary
+  ansible.builtin.stat:
+    path: "/usr/local/bin/istioctl-{{ istio_version }}"
+  register: versioned_istioctl_bin
+
+- name: Download Istio release archive
+  ansible.builtin.get_url:
+    url: "https://github.com/istio/istio/releases/download/{{ istio_version }}/istio-{{ istio_version }}-linux-amd64.tar.gz"
+    dest: "/tmp/istio-{{ istio_version }}-linux-amd64.tar.gz"
+    mode: "0644"
+  when: not versioned_istioctl_bin.stat.exists
+
+- name: Extract Istio release archive
+  ansible.builtin.unarchive:
+    src: "/tmp/istio-{{ istio_version }}-linux-amd64.tar.gz"
+    dest: /tmp
+    remote_src: true
+    creates: "/tmp/istio-{{ istio_version }}/bin/istioctl"
+  when: not versioned_istioctl_bin.stat.exists
+
+- name: Install versioned istioctl binary
+  ansible.builtin.copy:
+    src: "/tmp/istio-{{ istio_version }}/bin/istioctl"
+    dest: "/usr/local/bin/istioctl-{{ istio_version }}"
+    mode: "0755"
+    remote_src: true
+  when: not versioned_istioctl_bin.stat.exists
+
+- name: Point /usr/local/bin/istioctl to selected version
+  ansible.builtin.file:
+    src: "/usr/local/bin/istioctl-{{ istio_version }}"
+    dest: /usr/local/bin/istioctl
+    state: link
+    force: true
+
+- name: Create istio-system namespace
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: istio-system
+  become: true
+  become_user: "{{ minikube_user }}"
+
+- name: Install Istio base chart
+  kubernetes.core.helm:
+    name: istio-base
+    chart_ref: istio/base
+    chart_version: "{{ istio_version }}"
+    release_namespace: istio-system
+    create_namespace: false
+    wait: true
+    state: present
+  become: true
+  become_user: "{{ minikube_user }}"
+
+- name: Install Istio discovery chart
+  kubernetes.core.helm:
+    name: istiod
+    chart_ref: istio/istiod
+    chart_version: "{{ istio_version }}"
+    release_namespace: istio-system
+    create_namespace: false
+    wait: true
+    wait_timeout: 5m
+    state: present
+  become: true
+  become_user: "{{ minikube_user }}"
+
+- name: Install Istio ingress gateway chart
+  kubernetes.core.helm:
+    name: istio-ingressgateway
+    chart_ref: istio/gateway
+    chart_version: "{{ istio_version }}"
+    release_namespace: istio-system
+    create_namespace: false
+    wait: true
+    wait_timeout: 5m
+    state: present
+    values:
+      labels:
+        istio: ingressgateway
+  become: true
+  become_user: "{{ minikube_user }}"
+
+- name: Wait for istiod deployment to be available
+  kubernetes.core.k8s_info:
+    api_version: apps/v1
+    kind: Deployment
+    namespace: istio-system
+    name: istiod
+  become: true
+  become_user: "{{ minikube_user }}"
+  register: istiod_deploy
+  until:
+    - istiod_deploy.resources | length == 1
+    - (istiod_deploy.resources[0].status.availableReplicas | default(0)) >= 1
+  retries: 30
+  delay: 10
+
+- name: Wait for Istio ingress gateway deployment to be available
+  kubernetes.core.k8s_info:
+    api_version: apps/v1
+    kind: Deployment
+    namespace: istio-system
+    name: istio-ingressgateway
+  become: true
+  become_user: "{{ minikube_user }}"
+  register: ingressgateway_deploy
+  until:
+    - ingressgateway_deploy.resources | length == 1
+    - (ingressgateway_deploy.resources[0].status.availableReplicas | default(0)) >= 1
+  retries: 30
+  delay: 10

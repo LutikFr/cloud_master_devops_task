@@ -1,0 +1,31 @@
+alertmanager:
+  enabled: false
+pushgateway:
+  enabled: false
+kube-state-metrics:
+  enabled: true
+prometheus-node-exporter:
+  enabled: true
+server:
+  persistentVolume:
+    enabled: false
+  retention: 6h
+  extraScrapeConfigs: |
+    - job_name: istio-envoy
+      kubernetes_sd_configs:
+        - role: pod
+      relabel_configs:
+        - source_labels: [__meta_kubernetes_pod_container_name]
+          action: keep
+          regex: istio-proxy
+        - source_labels: [__address__]
+          action: replace
+          regex: ([^:]+)(?::\d+)?
+          replacement: $1:15090
+          target_label: __address__
+        - source_labels: [__meta_kubernetes_namespace]
+          target_label: namespace
+        - source_labels: [__meta_kubernetes_pod_name]
+          target_label: pod
+        - source_labels: [__meta_kubernetes_pod_label_app]
+          target_label: app

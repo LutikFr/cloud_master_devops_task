@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpbin
+  namespace: demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: httpbin
+  template:
+    metadata:
+      labels:
+        app: httpbin
+    spec:
+      containers:
+      - name: httpbin
+        image: docker.io/kong/httpbin:0.2.2
+        ports:
+        - containerPort: 80
+        readinessProbe:
+          httpGet:
+            path: /status/200
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10

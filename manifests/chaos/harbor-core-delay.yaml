@@ -1,0 +1,16 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: harbor-core-delay
+  namespace: harbor
+spec:
+  hosts: ["harbor-core.harbor.svc.cluster.local"]
+  http:
+  - fault:
+      delay:
+        percentage: {value: 100}
+        fixedDelay: 5s
+    route:
+    - destination:
+        host: harbor-core.harbor.svc.cluster.local
+        port: {number: 80}

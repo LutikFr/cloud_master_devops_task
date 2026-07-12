@@ -1,0 +1,46 @@
+---
+- name: Check helm binary
+  ansible.builtin.stat:
+    path: /usr/local/bin/helm
+  register: helm_bin
+
+- name: Download Helm archive
+  ansible.builtin.get_url:
+    url: "https://get.helm.sh/helm-{{ helm_version }}-linux-amd64.tar.gz"
+    dest: /tmp/helm-linux-amd64.tar.gz
+    mode: "0644"
+  when: not helm_bin.stat.exists
+
+- name: Extract Helm archive
+  ansible.builtin.unarchive:
+    src: /tmp/helm-linux-amd64.tar.gz
+    dest: /tmp
+    remote_src: true
+    creates: /tmp/linux-amd64/helm
+  when: not helm_bin.stat.exists
+
+- name: Install Helm binary
+  ansible.builtin.copy:
+    src: /tmp/linux-amd64/helm
+    dest: /usr/local/bin/helm
+    mode: "0755"
+    remote_src: true
+  when: not helm_bin.stat.exists
+
+- name: Add Harbor Helm repository
+  kubernetes.core.helm_repository:
+    name: harbor
+    repo_url: https://helm.goharbor.io
+    state: present
+    force_update: true
+  become: true
+  become_user: "{{ minikube_user }}"
+
+- name: Add Istio Helm repository
+  kubernetes.core.helm_repository:
+    name: istio
+    repo_url: https://istio-release.storage.googleapis.com/charts
+    state: present
+    force_update: true
+  become: true
+  become_user: "{{ minikube_user }}"

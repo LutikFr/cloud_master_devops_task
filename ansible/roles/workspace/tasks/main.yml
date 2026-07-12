@@ -1,0 +1,24 @@
+---
+- name: Create project directory on target host
+  ansible.builtin.file:
+    path: "{{ remote_repo_dir }}"
+    state: directory
+    owner: "{{ minikube_user }}"
+    group: "{{ minikube_user }}"
+    mode: "0755"
+
+- name: Copy Kubernetes manifests to target host
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../manifests/"
+    dest: "{{ remote_repo_dir }}/manifests/"
+    owner: "{{ minikube_user }}"
+    group: "{{ minikube_user }}"
+    mode: preserve
+
+- name: Copy scripts to target host
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../scripts/"
+    dest: "{{ remote_repo_dir }}/scripts/"
+    owner: "{{ minikube_user }}"
+    group: "{{ minikube_user }}"
+    mode: preserve

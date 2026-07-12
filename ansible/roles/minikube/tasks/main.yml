@@ -1,0 +1,55 @@
+---
+- name: Check minikube binary
+  ansible.builtin.stat:
+    path: /usr/local/bin/minikube
+  register: minikube_bin
+
+- name: Install minikube
+  ansible.builtin.get_url:
+    url: "https://storage.googleapis.com/minikube/releases/{{ minikube_version }}/minikube-linux-amd64"
+    dest: /usr/local/bin/minikube
+    mode: "0755"
+  when: not minikube_bin.stat.exists
+
+- name: Install kubectl
+  ansible.builtin.get_url:
+    url: "https://dl.k8s.io/release/{{ kubernetes_version }}/bin/linux/amd64/kubectl"
+    dest: /usr/local/bin/kubectl
+    mode: "0755"
+
+- name: Check minikube status
+  ansible.builtin.command: minikube status --format='{{ '{{' }}.Host{{ '}}' }}'
+  become: true
+  become_user: "{{ minikube_user }}"
+  register: minikube_status
+  changed_when: false
+  failed_when: false
+
+- name: Start minikube single-node cluster
+  ansible.builtin.command: >-
+    minikube start
+    --driver={{ minikube_driver }}
+    --kubernetes-version={{ kubernetes_version }}
+    --cpus={{ minikube_cpus }}
+    --memory={{ minikube_memory }}
+    --disk-size={{ minikube_disk_size }}
+    --addons=default-storageclass,storage-provisioner
+  become: true
+  become_user: "{{ minikube_user }}"
+  environment:
+    CHANGE_MINIKUBE_NONE_USER: "true"
+    HOME: "/home/{{ minikube_user }}"
+  when: minikube_status.rc != 0 or 'Running' not in minikube_status.stdout
+
+- name: Wait for Kubernetes nodes to become Ready
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Node
+  become: true
+  become_user: "{{ minikube_user }}"
+  register: node_info
+  until:
+    - node_info.resources | length > 0
+    - node_info.resources | json_query('[*].status.conditions[?type==`Ready`].status | [0]') | unique == ['True']
+  retries: 30
+  delay: 10

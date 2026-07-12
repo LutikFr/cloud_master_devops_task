@@ -1,0 +1,14 @@
+adminPassword: {{ grafana_admin_password }}
+persistence:
+  enabled: false
+service:
+  type: ClusterIP
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus-server.{{ monitoring_namespace }}.svc.cluster.local
+        isDefault: true
