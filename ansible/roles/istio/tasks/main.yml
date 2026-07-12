@@ -14,6 +14,12 @@
     url: "https://github.com/istio/istio/releases/download/{{ istio_version }}/istio-{{ istio_version }}-linux-{{ binary_arch }}.tar.gz"
     dest: "/tmp/istio-{{ istio_version }}-linux-{{ binary_arch }}.tar.gz"
     mode: "0644"
+    timeout: 300
+    force: false
+  register: istio_archive_download
+  until: istio_archive_download is succeeded
+  retries: 5
+  delay: 20
   when: istioctl_needs_install
 
 - name: Extract Istio release archive

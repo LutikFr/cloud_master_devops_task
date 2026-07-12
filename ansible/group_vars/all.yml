@@ -6,7 +6,7 @@ binary_arch_map:
   aarch64: arm64
   arm64: arm64
   amd64: amd64
-binary_arch: "{{ binary_arch_map[ansible_architecture] | default(ansible_architecture) }}"
+binary_arch: "{{ binary_arch_map[ansible_facts['architecture']] | default(ansible_facts['architecture']) }}"
 minikube_driver: "docker"
 minikube_user: "{{ ansible_env.SUDO_USER | default(ansible_user_id) }}"
 minikube_cpus: "4"
