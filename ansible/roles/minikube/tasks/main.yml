@@ -1,20 +1,33 @@
 ---
-- name: Check minikube binary
-  ansible.builtin.stat:
-    path: /usr/local/bin/minikube
-  register: minikube_bin
+- name: Check installed minikube version
+  ansible.builtin.command: /usr/local/bin/minikube version --short
+  register: minikube_version_check
+  changed_when: false
+  failed_when: false
 
-- name: Install minikube
+- name: Decide whether minikube must be installed or replaced
+  ansible.builtin.set_fact:
+    minikube_needs_install: "{{ minikube_version_check.rc != 0 or minikube_version not in minikube_version_check.stdout }}"
+
+- name: Download minikube binary
   ansible.builtin.get_url:
     url: "https://storage.googleapis.com/minikube/releases/{{ minikube_version }}/minikube-linux-{{ binary_arch }}"
-    dest: /usr/local/bin/minikube
+    dest: "/tmp/minikube-linux-{{ binary_arch }}"
     mode: "0755"
     timeout: 60
   register: minikube_download
   until: minikube_download is succeeded
   retries: 5
   delay: 10
-  when: not minikube_bin.stat.exists
+  when: minikube_needs_install
+
+- name: Install minikube binary
+  ansible.builtin.copy:
+    src: "/tmp/minikube-linux-{{ binary_arch }}"
+    dest: /usr/local/bin/minikube
+    mode: "0755"
+    remote_src: true
+  when: minikube_needs_install
 
 - name: Create apt keyrings directory
   ansible.builtin.file:

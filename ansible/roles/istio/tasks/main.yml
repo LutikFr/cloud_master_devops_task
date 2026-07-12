@@ -1,15 +1,20 @@
 ---
 - name: Check versioned istioctl binary
-  ansible.builtin.stat:
-    path: "/usr/local/bin/istioctl-{{ istio_version }}"
-  register: versioned_istioctl_bin
+  ansible.builtin.command: "/usr/local/bin/istioctl-{{ istio_version }} version --remote=false"
+  register: versioned_istioctl_check
+  changed_when: false
+  failed_when: false
+
+- name: Decide whether istioctl must be installed or replaced
+  ansible.builtin.set_fact:
+    istioctl_needs_install: "{{ versioned_istioctl_check.rc != 0 or istio_version not in versioned_istioctl_check.stdout }}"
 
 - name: Download Istio release archive
   ansible.builtin.get_url:
     url: "https://github.com/istio/istio/releases/download/{{ istio_version }}/istio-{{ istio_version }}-linux-{{ binary_arch }}.tar.gz"
     dest: "/tmp/istio-{{ istio_version }}-linux-{{ binary_arch }}.tar.gz"
     mode: "0644"
-  when: not versioned_istioctl_bin.stat.exists
+  when: istioctl_needs_install
 
 - name: Extract Istio release archive
   ansible.builtin.unarchive:
@@ -17,7 +22,7 @@
     dest: /tmp
     remote_src: true
     creates: "/tmp/istio-{{ istio_version }}/bin/istioctl"
-  when: not versioned_istioctl_bin.stat.exists
+  when: istioctl_needs_install
 
 - name: Install versioned istioctl binary
   ansible.builtin.copy:
@@ -25,7 +30,7 @@
     dest: "/usr/local/bin/istioctl-{{ istio_version }}"
     mode: "0755"
     remote_src: true
-  when: not versioned_istioctl_bin.stat.exists
+  when: istioctl_needs_install
 
 - name: Point /usr/local/bin/istioctl to selected version
   ansible.builtin.file:
