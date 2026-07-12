@@ -35,7 +35,9 @@
   ansible.builtin.template:
     src: harbor-values.yaml.j2
     dest: /tmp/harbor-values.yaml
-    mode: "0600"
+    owner: "{{ minikube_user }}"
+    group: "{{ minikube_user }}"
+    mode: "0640"
 
 - name: Install or upgrade Harbor Helm release
   kubernetes.core.helm:

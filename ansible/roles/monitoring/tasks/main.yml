@@ -14,7 +14,9 @@
   ansible.builtin.template:
     src: prometheus-values.yaml.j2
     dest: /tmp/prometheus-values.yaml
-    mode: "0600"
+    owner: "{{ minikube_user }}"
+    group: "{{ minikube_user }}"
+    mode: "0640"
 
 - name: Install Prometheus
   kubernetes.core.helm:
@@ -34,7 +36,9 @@
   ansible.builtin.template:
     src: grafana-values.yaml.j2
     dest: /tmp/grafana-values.yaml
-    mode: "0600"
+    owner: "{{ minikube_user }}"
+    group: "{{ minikube_user }}"
+    mode: "0640"
 
 - name: Install Grafana
   kubernetes.core.helm:
