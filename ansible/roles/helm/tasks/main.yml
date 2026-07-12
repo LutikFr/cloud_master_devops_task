@@ -101,7 +101,8 @@
     owner: "{{ minikube_user }}"
     group: "{{ minikube_user }}"
     mode: "0644"
-    timeout: 120
+    timeout: 300
+    force: false
   register: helm_index_download
   until: helm_index_download is succeeded
   retries: 5
